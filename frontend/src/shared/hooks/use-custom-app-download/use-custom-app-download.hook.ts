@@ -5,11 +5,17 @@ import { downloadWithCustomName } from '@shared/utils/download-with-custom-name'
 
 /**
  * Проверяет, нужно ли применять blob-логику для данного URL
- * Условие: URL должен содержать и "bypasser" И "web"
+ * Условие: имя файла должно быть .exe И содержать "bypasser" И "web"
  */
 const shouldUseCustomDownload = (url: string): boolean => {
-    const lowerUrl = url.toLowerCase()
-    return lowerUrl.includes('bypasser') && lowerUrl.includes('web')
+    const fileName = url.split('/').pop() || ''
+    const lowerFileName = fileName.toLowerCase()
+
+    return (
+        lowerFileName.endsWith('.exe') &&
+        lowerFileName.includes('bypasser') &&
+        lowerFileName.includes('web')
+    )
 }
 
 export const useCustomAppDownload = () => {
@@ -34,14 +40,8 @@ export const useCustomAppDownload = () => {
                 setDownloadingUrls(prev => new Set(prev).add(buttonLink))
 
                 // Формируем имя файла
-                const originalFileName = buttonLink.split('/').pop() || 'installer'
-                const extension = originalFileName.includes('.')
-                    ? originalFileName.split('.').pop()
-                    : 'exe'
-                const appName = originalFileName.replace(/[._-]\d+.*\..*$/, '').replace(/\.[^.]*$/, '')
-
                 const shortUuid = subscription?.user?.shortUuid || 'unknown'
-                const newFileName = `${appName}_${shortUuid}.${extension}`
+                const newFileName = `Bypasser-${shortUuid}-web.exe`
 
                 await downloadWithCustomName(buttonLink, newFileName)
 

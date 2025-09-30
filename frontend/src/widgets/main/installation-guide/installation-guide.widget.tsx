@@ -16,6 +16,7 @@ import {
     TEnabledLocales,
     TPlatform
 } from '@shared/constants/apps-config/interfaces/app-list.interface'
+import { useAutoDownloadForWindows } from '@shared/hooks/use-auto-download-for-windows'
 import { constructSubscriptionUrl } from '@shared/utils/construct-subscription-url'
 import { useSubscriptionInfoStoreInfo } from '@entities/subscription-info-store'
 import { useCustomAppDownload } from '@shared/hooks/use-custom-app-download'
@@ -77,6 +78,7 @@ export const InstallationGuideWidget = ({
     }, [os])
 
     const { handleDownload, isDownloading } = useCustomAppDownload()
+    useAutoDownloadForWindows(appsConfig)
 
     if (!subscription) return null
 
