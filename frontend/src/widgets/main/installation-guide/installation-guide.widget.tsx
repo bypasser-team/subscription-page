@@ -18,6 +18,7 @@ import {
 } from '@shared/constants/apps-config/interfaces/app-list.interface'
 import { constructSubscriptionUrl } from '@shared/utils/construct-subscription-url'
 import { useSubscriptionInfoStoreInfo } from '@entities/subscription-info-store'
+import { useCustomAppDownload } from '@shared/hooks/use-custom-app-download'
 
 import { BaseInstallationGuideWidget } from './installation-guide.base.widget'
 
@@ -74,6 +75,8 @@ export const InstallationGuideWidget = ({
                 break
         }
     }, [os])
+
+    const { handleDownload, isDownloading } = useCustomAppDownload()
 
     if (!subscription) return null
 
@@ -183,9 +186,12 @@ export const InstallationGuideWidget = ({
                         return (
                             <Button
                                 component="a"
+                                disabled={isDownloading(button.buttonLink)}
                                 href={button.buttonLink}
                                 key={index}
                                 leftSection={<IconExternalLink size={16} />}
+                                loading={isDownloading(button.buttonLink)}
+                                onClick={(e) => handleDownload(button.buttonLink, e)}
                                 target="_blank"
                                 variant="light"
                             >
@@ -261,6 +267,8 @@ export const InstallationGuideWidget = ({
                     firstStepTitle={getPlatformTitle(defaultTab as TPlatform)}
                     getAppsForPlatform={getAppsForPlatform}
                     getSelectedAppForPlatform={getSelectedAppForPlatform}
+                    handleDownload={handleDownload}
+                    isDownloading={isDownloading}
                     openDeepLink={openDeepLink}
                     platform={defaultTab as TPlatform}
                     renderFirstStepButton={renderFirstStepButton}
