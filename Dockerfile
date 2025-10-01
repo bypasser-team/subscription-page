@@ -1,3 +1,11 @@
+FROM node:22.18.0 AS frontend-build
+WORKDIR /opt/app/frontend
+COPY frontend/package*.json ./
+COPY frontend/.npmrc ./
+RUN npm ci
+COPY frontend/ .
+RUN npm run start:build
+
 FROM node:22.18.0 AS backend-build
 WORKDIR /opt/app
 
