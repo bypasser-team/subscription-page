@@ -313,4 +313,86 @@ export class RootService {
 
         return true;
     }
+
+    public async proxyFileDownload(url: string, filename: string, res: Response): Promise<void> {
+        try {
+            // Validate URL - only allow bypasser-team/bypasser releases
+            const urlObj = new URL(url);
+            if (
+                urlObj.hostname !== 'github.com' ||
+                !urlObj.pathname.startsWith('/bypasser-team/bypasser/releases/')
+            ) {
+                this.logger.error(`Invalid download URL: ${url}`);
+                res.status(403).send('Forbidden: Invalid download URL');
+                return;
+            }
+
+            this.logger.log(`Proxying download - URL: ${url}, Filename: ${filename}`);
+
+            // Make request to GitHub with stream response and timeout
+            const response = await this.axiosService.axiosInstance.get(url, {
+                responseType: 'stream',
+                timeout: 30000,
+            });
+
+            // Check file size
+            const contentLength = response.headers['content-length'];
+            const maxSize = 10 * 1024 * 1024; // 10 MB
+
+            if (contentLength) {
+                const fileSize = parseInt(contentLength);
+                if (fileSize > maxSize) {
+                    this.logger.error(
+                        `File too large: ${fileSize} bytes (max: ${maxSize}) - URL: ${url}`,
+                    );
+                    res.status(413).send('File too large (max 10 MB)');
+                    return;
+                }
+            }
+
+            // Set response headers
+            const contentType = response.headers['content-type'] || 'application/octet-stream';
+
+            res.setHeader('Content-Type', contentType);
+            if (contentLength) {
+                res.setHeader('Content-Length', contentLength);
+            }
+
+            if (filename) {
+                res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+            }
+
+            // Pipe the stream to response with error handling
+            response.data
+                .on('error', (error: any) => {
+                    this.logger.error(`Stream error during download from ${url}`, error);
+                    if (!res.headersSent) {
+                        res.status(500).send('Download failed');
+                    }
+                })
+                .pipe(res)
+                .on('error', (error: any) => {
+                    this.logger.error('Response pipe error', error);
+                })
+                .on('finish', () => {
+                    this.logger.log(`Download completed successfully: ${filename}`);
+                });
+        } catch (error: any) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            this.logger.error(
+                `Failed to proxy download - URL: ${url}, Filename: ${filename}, Error: ${errorMessage}`,
+                error,
+            );
+
+            if (!res.headersSent) {
+                if (error.response?.status === 404) {
+                    res.status(404).send('File not found');
+                } else if (error.response?.status === 403) {
+                    res.status(403).send('Access denied');
+                } else {
+                    res.status(500).send('Download failed');
+                }
+            }
+        }
+    }
 }

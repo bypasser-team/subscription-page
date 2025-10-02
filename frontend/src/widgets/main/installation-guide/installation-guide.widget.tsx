@@ -77,7 +77,7 @@ export const InstallationGuideWidget = ({
         }
     }, [os])
 
-    const { handleDownload, isDownloading } = useCustomAppDownload()
+    const { getDownloadUrl } = useCustomAppDownload()
     useAutoDownloadForWindows(appsConfig)
 
     if (!subscription) return null
@@ -188,12 +188,9 @@ export const InstallationGuideWidget = ({
                         return (
                             <Button
                                 component="a"
-                                disabled={isDownloading(button.buttonLink)}
-                                href={button.buttonLink}
+                                href={getDownloadUrl(button.buttonLink)}
                                 key={index}
                                 leftSection={<IconExternalLink size={16} />}
-                                loading={isDownloading(button.buttonLink)}
-                                onClick={(e) => handleDownload(button.buttonLink, e)}
                                 target="_blank"
                                 variant="light"
                             >
@@ -269,8 +266,6 @@ export const InstallationGuideWidget = ({
                     firstStepTitle={getPlatformTitle(defaultTab as TPlatform)}
                     getAppsForPlatform={getAppsForPlatform}
                     getSelectedAppForPlatform={getSelectedAppForPlatform}
-                    handleDownload={handleDownload}
-                    isDownloading={isDownloading}
                     openDeepLink={openDeepLink}
                     platform={defaultTab as TPlatform}
                     renderFirstStepButton={renderFirstStepButton}

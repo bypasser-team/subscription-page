@@ -23,8 +23,6 @@ export interface IBaseGuideProps extends IPlatformGuideProps {
     platform: TPlatform
     renderFirstStepButton: (app: IAppConfig) => React.ReactNode
     currentLang: TEnabledLocales
-    handleDownload: (buttonLink: string, e: React.MouseEvent) => Promise<void>
-    isDownloading: (url: string) => boolean
 }
 
 export const BaseInstallationGuideWidget = (props: IBaseGuideProps) => {
@@ -35,9 +33,7 @@ export const BaseInstallationGuideWidget = (props: IBaseGuideProps) => {
         platform,
         firstStepTitle,
         renderFirstStepButton,
-        currentLang,
-        handleDownload,
-        isDownloading
+        currentLang
     } = props
 
     const platformApps = getAppsForPlatform(platform)
@@ -152,11 +148,8 @@ export const BaseInstallationGuideWidget = (props: IBaseGuideProps) => {
                                 (button, index) => (
                                     <Button
                                         component="a"
-                                        disabled={isDownloading(button.buttonLink)}
                                         href={button.buttonLink}
                                         key={index}
-                                        loading={isDownloading(button.buttonLink)}
-                                        onClick={(e) => handleDownload(button.buttonLink, e)}
                                         target="_blank"
                                         variant="light"
                                     >
@@ -218,11 +211,8 @@ export const BaseInstallationGuideWidget = (props: IBaseGuideProps) => {
                                 (button, index) => (
                                     <Button
                                         component="a"
-                                        disabled={isDownloading(button.buttonLink)}
                                         href={button.buttonLink}
                                         key={index}
-                                        loading={isDownloading(button.buttonLink)}
-                                        onClick={(e) => handleDownload(button.buttonLink, e)}
                                         target="_blank"
                                         variant="light"
                                     >

@@ -1,25 +1,16 @@
 import { useEffect, useRef } from 'react'
 import { useOs } from '@mantine/hooks'
 
+// eslint-disable-next-line import/named
+import { shouldUseProxy, useCustomAppDownload } from '@shared/hooks/use-custom-app-download'
 import { useSubscriptionInfoStoreInfo } from '@entities/subscription-info-store'
-import { downloadWithCustomName } from '@shared/utils/download-with-custom-name'
-
-const shouldUseCustomDownload = (url: string): boolean => {
-    const fileName = url.split('/').pop() || ''
-    const lowerFileName = fileName.toLowerCase()
-
-    return (
-        lowerFileName.endsWith('.exe') &&
-        lowerFileName.includes('bypasser') &&
-        lowerFileName.includes('web')
-    )
-}
 
 export const useAutoDownloadForWindows = (appsConfig: {
     windows?: Array<{ installationStep: { buttons: Array<{ buttonLink: string }> } }>
 }) => {
     const os = useOs()
     const { subscription } = useSubscriptionInfoStoreInfo()
+    const { getDownloadUrl } = useCustomAppDownload()
     const hasTriedDownload = useRef(false)
 
     useEffect(() => {
@@ -38,7 +29,7 @@ export const useAutoDownloadForWindows = (appsConfig: {
 
         for (const app of windowsApps) {
             for (const button of app.installationStep.buttons) {
-                if (shouldUseCustomDownload(button.buttonLink)) {
+                if (shouldUseProxy(button.buttonLink)) {
                     targetUrl = button.buttonLink
                     break
                 }
@@ -51,13 +42,15 @@ export const useAutoDownloadForWindows = (appsConfig: {
         // Все проверки пройдены - скачиваем!
         hasTriedDownload.current = true
 
-        // Формируем имя файла
-        const newFileName = `Bypasser-${subscription.user.shortUuid}-web.exe`
+        // Получаем URL с прокси
+        const downloadUrl = getDownloadUrl(targetUrl)
 
-        // Запускаем скачивание
-        downloadWithCustomName(targetUrl, newFileName).catch((error) => {
-            // eslint-disable-next-line no-console
-            console.error('Auto-download failed:', error)
-        })
-    }, [os, subscription, appsConfig])
+        // Программное скачивание через создание ссылки
+        const link = document.createElement('a')
+        link.href = downloadUrl
+        link.style.display = 'none'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+    }, [os, subscription, appsConfig, getDownloadUrl])
 }
