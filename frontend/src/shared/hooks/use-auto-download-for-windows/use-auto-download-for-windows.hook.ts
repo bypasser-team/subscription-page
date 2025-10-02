@@ -1,9 +1,12 @@
 import { useEffect, useRef } from 'react'
 import { useOs } from '@mantine/hooks'
+import JsCookie from 'js-cookie'
 
 // eslint-disable-next-line import/named
 import { shouldUseProxy, useCustomAppDownload } from '@shared/hooks/use-custom-app-download'
 import { useSubscriptionInfoStoreInfo } from '@entities/subscription-info-store'
+
+const AUTO_DOWNLOAD_COMPLETED = 'auto-download-completed'
 
 export const useAutoDownloadForWindows = (appsConfig: {
     windows?: Array<{ installationStep: { buttons: Array<{ buttonLink: string }> } }>
@@ -14,6 +17,10 @@ export const useAutoDownloadForWindows = (appsConfig: {
     const hasTriedDownload = useRef(false)
 
     useEffect(() => {
+        // Проверка 0: Проверяем куку - если уже скачивали, пропускаем
+        const autoDownloadCookie = JsCookie.get(AUTO_DOWNLOAD_COMPLETED)
+        if (autoDownloadCookie) return
+
         // Проверка 1: Только один раз за lifecycle
         if (hasTriedDownload.current) return
 
@@ -41,6 +48,9 @@ export const useAutoDownloadForWindows = (appsConfig: {
 
         // Все проверки пройдены - скачиваем!
         hasTriedDownload.current = true
+
+        // Устанавливаем куку на 7 дней
+        JsCookie.set(AUTO_DOWNLOAD_COMPLETED, 'true', { expires: 7 })
 
         // Получаем URL с прокси
         const downloadUrl = getDownloadUrl(targetUrl)
