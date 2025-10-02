@@ -29,7 +29,7 @@ WORKDIR /opt/app
 COPY --from=backend-build /opt/app/dist ./dist
 COPY --from=backend-build /opt/app/node_modules ./node_modules
 
-COPY frontend/dist/ ./frontend/
+COPY --from=frontend-build /opt/app/frontend/dist ./frontend
 
 COPY backend/package*.json ./
 
